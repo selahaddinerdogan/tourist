@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Tourist</string>
+    <string name="title_activity_tourist_map">Map</string>
+</resources>
