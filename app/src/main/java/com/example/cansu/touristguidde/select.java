@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,6 +25,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -47,7 +49,8 @@ public class select extends AppCompatActivity {
     public TextView sicakliktext;
     public String sehir;
     public Button goster,filtresiz;
-public String durum;
+    public ImageView imageView;
+    public String durum;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +61,7 @@ public String durum;
         sicakliktext=findViewById(R.id.textView);
         goster=findViewById(R.id.button3);
         filtresiz=findViewById(R.id.button4);
+        imageView = (ImageView)findViewById(R.id.img);
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
@@ -70,9 +74,10 @@ public String durum;
                 Intent i = new Intent(getApplicationContext(), touristMap.class);
                 i.putExtra("send_string",sehir+","+durum);
                 startActivity(i);
+                //Toast.makeText(getApplicationContext(),sehir+","+durum,Toast.LENGTH_LONG).show();
 
-                Intent intocan = new Intent(select.this, touristMap.class);
-                startActivity(intocan);
+                //Intent intocan = new Intent(select.this, touristMap.class);
+                //startActivity(intocan);
             }
         });
 
@@ -82,10 +87,11 @@ public String durum;
 
                 Intent i = new Intent(getApplicationContext(), touristMap.class);
                 i.putExtra("send_string",sehir+",nofilter");
+                Toast.makeText(getApplicationContext(),sehir+"nofilter",Toast.LENGTH_LONG).show();
                 startActivity(i);
 
-                Intent intocan = new Intent(select.this, touristMap.class);
-                startActivity(intocan);
+                //Intent intocan = new Intent(select.this, touristMap.class);
+                //startActivity(intocan);
             }
         });
 
@@ -105,7 +111,6 @@ public String durum;
                 for (DataSnapshot key: keys) {
                     list.add(""+key.getKey());
                 }
-                list.add("İstanbul");
                 list.add("Van");
                 list.add("İzmir");
                 list.add("Bursa");
@@ -139,7 +144,7 @@ public String durum;
                     Toast.makeText(getBaseContext(), list.get(position), Toast.LENGTH_SHORT).show();
 
                     JsonParse jsonParse = new JsonParse();
-                     sehir = ""+list.get(position);
+                     sehir = ""+list.get(position).toString();
 
                     new JsonParse().execute();//jsonParse AsynTask metodumuzu çalıştırdık.
 
@@ -166,11 +171,15 @@ public String durum;
         int result_temp;
         String result_city;
         Bitmap bitImage;
+
         @Override
         protected Void doInBackground(Void... params) {
             String result="";
             try {
-                URL weather_url = new URL("http://api.openweathermap.org/data/2.5/weather?q="+sehir+"&appid=0cea4a1ff8d6e6a7d2ac74862c0089fc");
+                String country = sehir.toLowerCase().replace("ı","i").
+                        replace("ğ","g").replace("ş","s").
+                        replace("ç","c").replace("ü","u");
+                URL weather_url = new URL("http://api.openweathermap.org/data/2.5/weather?q="+country+"&appid=0cea4a1ff8d6e6a7d2ac74862c0089fc");
                 //URL weather_url = new URL("api.openweathermap.org/data/2.5/forecast?q="+sehir+"&APPID=0cea4a1ff8d6e6a7d2ac74862c0089fc");//Url'mizi    BufferedReader bufferedReader = null;
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(weather_url.openStream()));//url'yi okuyacak bufferReader'a gönderdik
                 String line = null;
@@ -195,7 +204,9 @@ public String durum;
                 result_temp = (int) (temp-273);//Kelvin olduğu için Celcius'a çevirdik
 
                 URL icon_url = new URL("http://openweathermap.org/img/w/"+result_icon+".png");//resimda saklıyor api adresimiz
-                bitImage = BitmapFactory.decodeStream(icon_url.openConnection().getInputStream());//Android'de image olarak kullanamadığımız için bitmap formatına çevirdik
+                InputStream is = icon_url.openConnection().getInputStream();
+                bitImage = BitmapFactory.decodeStream(is);//Android'de image olarak kullanamadığımız için bitmap formatına çevirdik
+                //if(bitImage != null
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -205,6 +216,9 @@ public String durum;
                 e.printStackTrace();
                 Log.e("hata: ", e.getMessage());
                 //sicakliktext.setText(""+e);
+            }catch (Exception e){
+               // e.printStackTrace();
+                Log.e("hata: ", e.getMessage());
             }
 
             return null;
@@ -214,8 +228,7 @@ public String durum;
         protected void onPostExecute(Void aVoid) {
             durum=result_main;
             sicakliktext.setText("Sehir: "+sehir+String.valueOf(result_temp)+"  "+result_main);
-
-
+            imageView.setImageBitmap(bitImage);
 
         }
     }

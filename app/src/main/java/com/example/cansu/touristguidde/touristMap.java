@@ -67,24 +67,25 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
         mapFragment.getMapAsync(this);
         try {
             Bundle extras = getIntent().getExtras();
-            //String value = extras.getString("send_string");
-            String dizi[] = {"ELAZIG","nofilter"};
+            String value = extras.getString("send_string");
+            Toast.makeText(getApplicationContext(),value,Toast.LENGTH_LONG).show();
+            //String dizi[] = {"ELAZIG","nofilter"};
 
-            ///String dizi[]=value.split(",");
+            String dizi[]=value.split(",");
 
             if(dizi[1].equals(("nofilter"))){
                 secilimekantipi="nofilter";
             }
             else if(dizi[1].equals("Rain")){
-                secilimekantipi="Kapali";
+                secilimekantipi="Kapalı";
             }else{
-                secilimekantipi="Acik";
+                secilimekantipi="ACIK";
             }
 
-            //Toast.makeText(getBaseContext(), "İşte bu şehirdesin " + dizi[0]+", Gösterilecek mekan tipi "+dizi[1], Toast.LENGTH_SHORT).show();
+            Toast.makeText(getBaseContext(), "İşte bu şehirdesin " + dizi[0]+", Gösterilecek mekan tipi "+dizi[1], Toast.LENGTH_SHORT).show();
             ilegit(dizi[0]);
         }catch (Exception ex){
-            Log.e("hata: ",ex.getMessage());
+            Toast.makeText(getBaseContext(), "hata :"+ex.getMessage(), Toast.LENGTH_SHORT).show();
         }
 
 
@@ -100,8 +101,6 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
         okuma.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-
-
                 Iterable<DataSnapshot> keys = dataSnapshot.getChildren();
                 for (DataSnapshot key : keys) {
                     Log.e("key------- ",key.getKey());
@@ -123,10 +122,17 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
                                 Log.e("bilgi key3------- ",bilgi.getKey());
 
                                 Iterable<DataSnapshot> yerdetay = bilgi.getChildren();
+                                String koord = "";
+                                String tip = "";
                                 for (DataSnapshot detay : yerdetay) {
-
                                     if (detay.getKey().equalsIgnoreCase("Koordinat")) {
-                                        Log.e("bilgi key2-------- ", key.getKey());
+                                        koord = detay.getValue().toString();
+                                    }if (detay.getKey().equalsIgnoreCase("Tipi")) {
+                                        tip = detay.getValue().toString();
+                                    }
+
+                                    if ((koord.length() > 2 && tip.equalsIgnoreCase(secilimekantipi))||secilimekantipi.equalsIgnoreCase("nofilter")) {
+                                        //Log.e("bilgi key2-------- ", detay.getKey());
 
                                         BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
                                     /*
@@ -141,13 +147,11 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
                                         float   HUE_VIOLET
                                         float   HUE_YELLOW
                                     */
-
-
-                                        String[] koordinat = ("" + detay.getValue()).split(",");
+                                        String[] koordinat = ("" + koord).split(",");
                                         double x = Double.parseDouble(koordinat[0]);
                                         double y = Double.parseDouble(koordinat[1]);
                                         LatLng ilcekoordinat = new LatLng(x, y);
-                                        mMap.addMarker(new MarkerOptions().position(ilcekoordinat).title("" + ilce.getKey()).icon(bitmapDescriptor)).setTag("ilce");
+                                        mMap.addMarker(new MarkerOptions().position(ilcekoordinat).title("" + bilgi.getKey()).icon(bitmapDescriptor)).setTag("ilce");
                                     }
                                 }
 
@@ -180,27 +184,18 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
 
 
 
-    public void rotaOlustur() {
+    public void rotaOlustur(LatLng latLng) {
         Location myLocation = mMap.getMyLocation();
-        //LatLng barcelona = new LatLng(41.385064,2.173403);
-        LatLng barcelona = new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(barcelona).title("Marker in Barcelona"));
-
-        LatLng madrid = new LatLng(38.7108448,39.2331696);
-        mMap.addMarker(new MarkerOptions().position(madrid).title("Marker in Madrid"));
-
-        //LatLng zaragoza = new LatLng(41.648823,-0.889085);
-
-        //Define list to get all latlng for the route
         List<LatLng> path = new ArrayList();
-
-
         //Execute Directions API request
         String strlat = String.valueOf(myLocation.getLatitude());
         String strlon = String.valueOf(myLocation.getLongitude());
         String lat_lon = strlat+","+strlon;
+        String strdestlat = String.valueOf(latLng.latitude);
+        String strdestlon = String.valueOf(latLng.longitude);
+        String dest_lat_lon = strdestlat+","+strdestlon;
         GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyAPU_3J6KmVxgL5cGajEbQOvjEWkNN6zCQ");
-        DirectionsApiRequest req = DirectionsApi.getDirections(context, lat_lon, "38.7108448,39.2331696");
+        DirectionsApiRequest req = DirectionsApi.getDirections(context, lat_lon, dest_lat_lon);
         try {
             DirectionsResult res = req.await();
 
@@ -294,7 +289,7 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
 
                 gezilecek_yer_olustur(title);
 
-                rotaOlustur();
+                rotaOlustur(marker.getPosition());
                 return false;
             }
         });
@@ -420,7 +415,4 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
             }
         });
     }
-
-
-
 }
