@@ -39,6 +39,7 @@ import com.google.maps.model.DirectionsLeg;
 import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.DirectionsRoute;
 import com.google.maps.model.DirectionsStep;
+import com.google.maps.model.Distance;
 import com.google.maps.model.EncodedPolyline;
 
 import java.sql.SQLOutput;
@@ -53,7 +54,7 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
     public String bulundugumuz_sehir;
     public String secilimekantipi = "";
 
-    public List<String> list = new ArrayList<String>();
+    public List<Marker> myFavorisList = new ArrayList<Marker>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -184,15 +185,14 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
 
 
 
-    public void rotaOlustur(LatLng latLng) {
-        Location myLocation = mMap.getMyLocation();
+    public void rotaOlustur(LatLng myLocation, LatLng destLocation) {
         List<LatLng> path = new ArrayList();
         //Execute Directions API request
-        String strlat = String.valueOf(myLocation.getLatitude());
-        String strlon = String.valueOf(myLocation.getLongitude());
+        String strlat = String.valueOf(myLocation.latitude);
+        String strlon = String.valueOf(myLocation.longitude);
         String lat_lon = strlat+","+strlon;
-        String strdestlat = String.valueOf(latLng.latitude);
-        String strdestlon = String.valueOf(latLng.longitude);
+        String strdestlat = String.valueOf(destLocation.latitude);
+        String strdestlon = String.valueOf(destLocation.longitude);
         String dest_lat_lon = strdestlat+","+strdestlon;
         GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyAPU_3J6KmVxgL5cGajEbQOvjEWkNN6zCQ");
         DirectionsApiRequest req = DirectionsApi.getDirections(context, lat_lon, dest_lat_lon);
@@ -252,6 +252,82 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
     }
 
 
+    public void RotaOlustur(){
+        Toast.makeText(getBaseContext(), "Konum alınacak.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getBaseContext(), "Rota oluşturulacak", Toast.LENGTH_SHORT).show();
+        Location myLocation = mMap.getMyLocation();
+        LatLng  myLatLng = new LatLng(myLocation.getLatitude(),myLocation.getLongitude());
+        List<Marker> myFavoritesListRep = new ArrayList<Marker>();
+        for (Marker marker:myFavorisList){
+            myFavoritesListRep.add(marker);
+        }
+        int min_index = uzaklıkBulma(myLatLng, myFavoritesListRep);
+        Log.e("marker ","bulunan yer -- "+myFavoritesListRep.get(min_index).getTitle()+" -- ");
+        rotaOlustur(myLatLng, myFavoritesListRep.get(min_index).getPosition());
+        if (myFavoritesListRep.size() > 1) {
+            for (int i = 0; i < myFavorisList.size()-1; i++) {
+               // Log.e("ep list size: ",myFavoritesListRep.size()+"");
+                Marker marker = myFavoritesListRep.get(min_index);
+                myLatLng = marker.getPosition();
+                myFavoritesListRep.remove(min_index);
+//                Log.e("marker ",marker.getTitle()+" -- "+myFavoritesListRep.get(min_index).getTitle());
+                min_index = uzaklıkBulma(myLatLng, myFavoritesListRep);
+                Log.e("marker ",marker.getTitle()+" -- "+myFavoritesListRep.get(min_index).getTitle()+" -- "+myFavoritesListRep.size());
+                rotaOlustur(myLatLng, myFavoritesListRep.get(min_index).getPosition());
+                Log.e("--------------------- ","-----------------------------------");
+
+            }
+        }
+
+    }
+
+    public int uzaklıkBulma(LatLng myLocation, List<Marker> nodeList){
+
+        //Execute Directions API request
+        String strlat = String.valueOf(myLocation.latitude);
+        String strlon = String.valueOf(myLocation.longitude);
+        String lat_lon = strlat+","+strlon;
+        Long min_distance = -1l; //uzaklık negatif olamayacagi icin baslangic degeri -1 verdik,
+        int min_index = 0;
+        for (int index =0; index<nodeList.size();index++) {
+            Marker marker = nodeList.get(index);
+            String strdestlat = String.valueOf(marker.getPosition().latitude);
+            String strdestlon = String.valueOf(marker.getPosition().longitude);
+            String dest_lat_lon = strdestlat + "," + strdestlon;
+            GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyAPU_3J6KmVxgL5cGajEbQOvjEWkNN6zCQ");
+            DirectionsApiRequest req = DirectionsApi.getDirections(context, lat_lon, dest_lat_lon);
+            try {
+                DirectionsResult res = req.await();
+                //Loop through legs and steps to get encoded polylines of each step
+                if (res.routes != null && res.routes.length > 0) {
+                    DirectionsRoute route = res.routes[0];
+
+                    if (route.legs != null) {
+                        for (int i = 0; i < route.legs.length; i++) {
+                            Long distance = route.legs[i].distance.inMeters;// iki node arasındaki uzaklığı metre cinsinden bulduk
+                            Log.e("uzaklık metre: ", distance + "");
+                            if (min_distance == -1l) {
+                                min_distance = distance;
+                                min_index = index;
+                            }
+                            else if(min_distance > distance) {
+                                min_distance = distance;
+                                min_index = index;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                ex.getStackTrace();
+                Log.e("Hata: ", ex.getMessage());
+                return -1;
+            }
+        }
+        return min_index;
+
+    }
+
+
 
 
     @Override
@@ -272,16 +348,18 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                float zoomLevel = 12.0f;
+                float zoomLevel = 8.0f;
                 String secim = marker.getTag().toString();
-                if (secim.equals("ilce")) {
+                Log.e("secim tipi",marker.getTag().toString());
+                Listeyeekle(marker);
+                /*if (secim.equals("ilce")) {
                     zoomLevel = 15.0f; //This goes up to 21
                     //Listeyeekle(marker.getTitle());
                 } else if (secim.equals("mekan")) {
                     //zoomLevel = 18.0f; //This goes up to 21
-                    Listeyeekle(marker.getTitle());
+                    Listeyeekle(marker);
 
-                }
+                }*/
                 //Toast.makeText(getBaseContext(), "click " + marker.getTitle() + " bu bir " + secim, Toast.LENGTH_SHORT).show();
                 String title = marker.getTitle();
 
@@ -289,7 +367,7 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
 
                 gezilecek_yer_olustur(title);
 
-                rotaOlustur(marker.getPosition());
+                //rotaOlustur(marker.getPosition());
                 return false;
             }
         });
@@ -298,15 +376,20 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
     }
 
 
-    public void Listeyeekle(final String mekan) {
+    public void Listeyeekle(final Marker marker) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final String mekan = marker.getTitle();
         builder.setTitle(mekan);
         builder.setCancelable(false);
         builder.setPositiveButton("Listeye Ekle", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                Toast.makeText(getBaseContext(), mekan +" Listeye eklendi", Toast.LENGTH_SHORT).show();
-                list.add("" + mekan);
+                if (!myFavorisList.contains(marker)) {
+                    myFavorisList.add(marker);
+                    Toast.makeText(getBaseContext(), mekan +" Listeye eklendi", Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(getBaseContext(), mekan +" Daha Önce Eklenmiş", Toast.LENGTH_SHORT).show();
+                }
 
             }
         });
@@ -335,7 +418,11 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
     public void Listeyigoster(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Seçili Mekanlar");
-        builder.setMessage(TextUtils.join(", ", list));
+        String yerler = "";
+        for (Marker marker: myFavorisList){
+            yerler = yerler + marker.getTitle()+",  ";
+        }
+        builder.setMessage(yerler);
 
         builder.setCancelable(false);
         builder.setPositiveButton("Rota Oluştur", new DialogInterface.OnClickListener() {
@@ -358,10 +445,6 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
         builder.create().show();
     }
 
-    public void RotaOlustur(){
-        Toast.makeText(getBaseContext(), "Konum alınacak.", Toast.LENGTH_SHORT).show();
-        Toast.makeText(getBaseContext(), "Rota oluşturulacak", Toast.LENGTH_SHORT).show();
-    }
 
     public void gezilecek_yer_olustur(String ilce) {
         DatabaseReference yerler = FirebaseDatabase.getInstance().getReference("CITIES/" + bulundugumuz_sehir + "/Ilceler/" + ilce);
