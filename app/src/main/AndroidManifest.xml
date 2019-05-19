@@ -43,8 +43,11 @@
         <activity
             android:name=".touristMap"
             android:exported="true"
-
             android:label="@string/title_activity_tourist_map" />
+        <activity
+            android:name=".SelectCity"
+            android:exported="true"
+            android:label="Şehirler" />
         <activity android:name=".select"
             android:exported="true"
             />

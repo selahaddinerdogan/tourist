@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                             FirebaseUser user = mAuth.getCurrentUser();
                             Toast.makeText(getBaseContext(),"Giriş Başarılı. Kullanıcı adı: "+user.getUid(), Toast.LENGTH_SHORT).show();
 
-                            Intent intocan = new Intent(MainActivity.this, select.class);
+                            Intent intocan = new Intent(MainActivity.this, SelectCity.class);
                             startActivity(intocan);
                         } else {
                             // If sign in fails, display a message to the user.

@@ -12,9 +12,13 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.SearchView;
+
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -37,10 +41,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public class select extends AppCompatActivity {
+public class select extends AppCompatActivity  {
 
     public Spinner sp1;
-    public List<String> list = new ArrayList<String>();
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -52,20 +55,31 @@ public class select extends AppCompatActivity {
     public ImageView imageView;
     public String durum;
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select);
-
-        sp1 =  findViewById(R.id.spinner);
         sicakliktext=findViewById(R.id.textView);
         goster=findViewById(R.id.button3);
         filtresiz=findViewById(R.id.button4);
+
         imageView = (ImageView)findViewById(R.id.img);
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        try {
+            Bundle extras = getIntent().getExtras();
+            sehir = extras.getString("city");
+            JsonParse jsonParse = new JsonParse();
+            new JsonParse().execute();
 
-        sehirlerial();
+        }catch (Exception ex){
+            Toast.makeText(this,ex.getMessage(),Toast.LENGTH_LONG).show();
+        }
+
+
 
         goster.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,71 +112,6 @@ public class select extends AppCompatActivity {
 
 
     }
-    private void sehirlerial(){
-
-        DatabaseReference okuma = FirebaseDatabase.getInstance().getReference("CITIES");
-        okuma.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-
-                Iterable<DataSnapshot> keys = dataSnapshot.getChildren();
-                list.add("Ankara");
-                for (DataSnapshot key: keys) {
-                    list.add(""+key.getKey());
-                }
-                list.add("Van");
-                list.add("İzmir");
-                list.add("Bursa");
-
-
-                clickekle();
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-    }
-
-    public void clickekle(){
-        ArrayAdapter<String> adp1 = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, list);
-        adp1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sp1.setAdapter(adp1);
-
-
-        sp1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
-        {
-
-            @Override
-            public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long id) {
-                // TODO Auto-generated method stub
-                if(secim>0) {
-                    Toast.makeText(getBaseContext(), list.get(position), Toast.LENGTH_SHORT).show();
-
-                    JsonParse jsonParse = new JsonParse();
-                     sehir = ""+list.get(position).toString();
-
-                    new JsonParse().execute();//jsonParse AsynTask metodumuzu çalıştırdık.
-
-
-                }
-                secim=1;
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> arg0) {
-                Toast.makeText(getBaseContext(), "seçim yapılmadı", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-
-
     //AsynTask olayını başka bir yazıda açıklayacağım inşallah ama internetten araştırabilirsiniz çok güzel anlatan siteler var.
     protected class JsonParse extends AsyncTask<Void, Void, Void> {
         String result_main ="";
