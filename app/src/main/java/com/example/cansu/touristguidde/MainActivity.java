@@ -1,7 +1,12 @@
 package com.example.cansu.touristguidde;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -19,11 +24,14 @@ public class MainActivity extends AppCompatActivity {
 
 
     private FirebaseAuth mAuth;
+    private Context context;
+    private int REQUEST_CODE = 99;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context=getApplicationContext();
         Button kayitbuton = (Button)findViewById(R.id.button2);
         Button girisbuton = (Button)findViewById(R.id.button);
         final EditText emailtext=(EditText)findViewById(R.id.editText2);
@@ -103,6 +111,29 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+    }
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void Permission(){
+        if (context.checkCallingPermission(Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.INTERNET,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_NETWORK_STATE,
+                    Manifest.permission.SYSTEM_ALERT_WINDOW,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_CODE);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+            }
+            else {
+                Toast.makeText(context,getResources().getString(R.string.no_permission),Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
 

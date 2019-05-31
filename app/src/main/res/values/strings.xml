@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Tourist</string>
     <string name="title_activity_tourist_map">Map</string>
+    <string name="no_permission">İzin verilmedi! İşleme devam edilemiyor.</string>
 </resources>
