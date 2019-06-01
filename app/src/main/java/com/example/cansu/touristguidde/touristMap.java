@@ -73,13 +73,11 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
             //String dizi[] = {"ELAZIG","nofilter"};
 
             String dizi[]=value.split(",");
-            if(dizi[1].equals(("nofilter"))){
-                secilimekantipi="nofilter";
-            }
-            else if(dizi[1].equals("Rain")){
+
+            if(dizi[1].equals("Rain")){
                 secilimekantipi="Kapalı";
             }else{
-                secilimekantipi="";
+                secilimekantipi="nofilter";
             }
 
             Toast.makeText(getBaseContext(), "İşte bu şehirdesin " + dizi[0]+", Gösterilecek mekan tipi "+dizi[1], Toast.LENGTH_SHORT).show();
