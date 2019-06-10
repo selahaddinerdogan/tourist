@@ -7,7 +7,10 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.StrictMode;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -53,6 +56,7 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
     private DatabaseReference mDatabase;
     public String bulundugumuz_sehir;
     public String secilimekantipi = "";
+    public static final int LOCATION_REQUEST_CODE=99;
 
     public List<Marker> myFavorisList = new ArrayList<Marker>();
 
@@ -66,6 +70,9 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkLocationPermission();
+        }
         try {
             Bundle extras = getIntent().getExtras();
             String value = extras.getString("send_string");
@@ -73,9 +80,14 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
             //String dizi[] = {"ELAZIG","nofilter"};
 
             String dizi[]=value.split(",");
+            String alanFilter = dizi[1];
+            Log.e("bilgi key3------- ",alanFilter);
 
-            if(dizi[1].equals("Rain")){
+
+            if(alanFilter.equals("Kapalı Alanlar")){
                 secilimekantipi="Kapalı";
+            }else if(alanFilter.equals("Açık Alanlar")){
+                secilimekantipi="ACIK";
             }else{
                 secilimekantipi="nofilter";
             }
@@ -494,5 +506,31 @@ public class touristMap extends FragmentActivity implements OnMapReadyCallback {
 
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case LOCATION_REQUEST_CODE:
+                if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+                    if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
+                        mMap.setMyLocationEnabled(true);
+                    }
+                }else{
+                    Toast.makeText(this,"Izin reddedildi.",Toast.LENGTH_LONG).show();
+                }
+        }
+    }
+
+    public boolean checkLocationPermission(){
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_FINE_LOCATION)){
+                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},LOCATION_REQUEST_CODE);
+            }else{
+                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},LOCATION_REQUEST_CODE);
+            }
+            return false;
+        }else
+            return true;
     }
 }

@@ -13,6 +13,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -49,11 +51,14 @@ public class select extends AppCompatActivity  {
     private DatabaseReference mDatabase;
     public  int secim=0;
 
-    public TextView sicakliktext;
+    public TextView sicaklik;
+    public TextView il;
     public String sehir;
-    public Button goster,filtresiz;
+    public Button goster;
     public ImageView imageView;
     public String durum;
+    private RadioGroup radioAlanGroup;
+    private RadioButton radioAlanlarButton;
 
 
 
@@ -62,9 +67,10 @@ public class select extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select);
-        sicakliktext=findViewById(R.id.textView);
+        il=findViewById(R.id.il);
+        sicaklik=findViewById(R.id.sicaklik);
         goster=findViewById(R.id.button3);
-        filtresiz=findViewById(R.id.button4);
+        radioAlanGroup = (RadioGroup) findViewById(R.id.radioAlanlar);
 
         imageView = (ImageView)findViewById(R.id.img);
         mAuth = FirebaseAuth.getInstance();
@@ -84,6 +90,9 @@ public class select extends AppCompatActivity  {
         goster.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                int selectedId = radioAlanGroup.getCheckedRadioButtonId();
+                radioAlanlarButton = findViewById(selectedId);
+                durum = (String) radioAlanlarButton.getText();
 
                 Intent i = new Intent(getApplicationContext(), touristMap.class);
                 i.putExtra("send_string",sehir+","+durum);
@@ -94,22 +103,6 @@ public class select extends AppCompatActivity  {
                 //startActivity(intocan);
             }
         });
-
-        filtresiz.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Intent i = new Intent(getApplicationContext(), touristMap.class);
-                i.putExtra("send_string",sehir+",nofilter");
-                Toast.makeText(getApplicationContext(),sehir+"nofilter",Toast.LENGTH_LONG).show();
-                startActivity(i);
-
-                //Intent intocan = new Intent(select.this, touristMap.class);
-                //startActivity(intocan);
-            }
-        });
-
-
 
     }
     //AsynTask olayını başka bir yazıda açıklayacağım inşallah ama internetten araştırabilirsiniz çok güzel anlatan siteler var.
@@ -176,7 +169,8 @@ public class select extends AppCompatActivity  {
         @Override
         protected void onPostExecute(Void aVoid) {
             durum=result_main;
-            sicakliktext.setText("Sehir: "+sehir+String.valueOf(result_temp)+"  "+result_main);
+            il.setText("Sehir: "+sehir);
+            sicaklik.setText("Sıcaklık: "+String.valueOf(result_temp)+" C");
             imageView.setImageBitmap(bitImage);
 
         }
