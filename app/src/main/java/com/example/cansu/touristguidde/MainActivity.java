@@ -3,6 +3,7 @@ package com.example.cansu.touristguidde;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private Context context;
     private int REQUEST_CODE = 99;
+    SharedPreferences sharedPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
         Button girisbuton = (Button)findViewById(R.id.button);
         final EditText emailtext=(EditText)findViewById(R.id.editText2);
         final EditText passwordtext=(EditText)findViewById(R.id.editText3);
+        sharedPref = MainActivity.this.getSharedPreferences("sharedPref",Context.MODE_PRIVATE);
+        boolean loginStatus = sharedPref.getBoolean("login",false);
+        if(loginStatus){
+            Intent intocan = new Intent(MainActivity.this, NavbarActivity.class);
+            startActivity(intocan);
+        }
 
 
         mAuth = FirebaseAuth.getInstance();
@@ -96,11 +104,14 @@ public class MainActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
-
                             FirebaseUser user = mAuth.getCurrentUser();
-                            Toast.makeText(getBaseContext(),"Giriş Başarılı. Kullanıcı adı: "+user.getUid(), Toast.LENGTH_SHORT).show();
 
-                            Intent intocan = new Intent(MainActivity.this, SelectCity.class);
+                            Toast.makeText(getBaseContext(),"Giriş Başarılı. Kullanıcı adı: "+user.getEmail(), Toast.LENGTH_SHORT).show();
+                            SharedPreferences.Editor editor = sharedPref.edit(); //SharedPreferences'a kayıt eklemek için editor oluşturuyoruz
+                            editor.putString("useremail",user.getEmail());
+                            editor.putBoolean("login",true);
+                            editor.commit();
+                            Intent intocan = new Intent(MainActivity.this, NavbarActivity.class);
                             startActivity(intocan);
                         } else {
                             // If sign in fails, display a message to the user.

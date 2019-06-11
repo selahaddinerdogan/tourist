@@ -2,4 +2,10 @@
     <string name="app_name">Tourist</string>
     <string name="title_activity_tourist_map">Map</string>
     <string name="no_permission">İzin verilmedi! İşleme devam edilemiyor.</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
 </resources>
