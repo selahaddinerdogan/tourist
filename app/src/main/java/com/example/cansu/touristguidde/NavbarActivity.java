@@ -114,7 +114,7 @@ public class NavbarActivity extends AppCompatActivity
 
 
         } else if (id == R.id.tourist_guide) {
-            Intent intocan = new Intent(NavbarActivity.this, select.class);
+            Intent intocan = new Intent(NavbarActivity.this, SelectCity.class);
             startActivity(intocan);
 
         } else if (id == R.id.logout) {
